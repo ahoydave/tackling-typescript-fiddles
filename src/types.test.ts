@@ -50,7 +50,7 @@ test('Rest parameters', () => {
 });
 
 test('Union type', () => {
-    const f = (a: string, b: string|number) => a + ' ' + String(b);
+    const f = (a: string, b: string | number) => a + ' ' + String(b);
     expect(f('hi', 'there')).toBe('hi there');
     expect(f('hi', 5)).toBe('hi 5');
 });
@@ -58,15 +58,15 @@ test('Union type', () => {
 test('Null and undefined need to be explicity included in a type', () => {
     let str: string;
     // nope
-    // v = undefined;
-    let maybeStr: string|void;
+    // str = undefined;
+    let maybeStr: string | void;
     // equivalent to
     // let maybeStr: string|undefined;
     maybeStr = undefined;
     expect(maybeStr).toBeUndefined();
     // nope
     // maybeStr = null;
-    let maybeMaybeStr: string|undefined|null;
+    let maybeMaybeStr: string | undefined | null;
     // nope
     // console.log(maybeMaybeStr);
     maybeMaybeStr = null;
@@ -75,7 +75,7 @@ test('Null and undefined need to be explicity included in a type', () => {
 
 test('Null params may not be omitted from function call', () => {
     const f = (a?: number) => true;
-    const g = (a: number|undefined) => true;
+    const g = (a: number | undefined) => true;
     expect(f()).toBe(true);
     // nope
     // expect(g()).toBe(true);
@@ -88,7 +88,7 @@ test('Object types are structural not nominal', () => {
         y: number
     }
     const f = (p: Point) => `x: ${p.x}, y: ${p.y}`;
-    const obj = {x: 1, y: 2};
+    const obj = { x: 1, y: 2 };
     // obj has correct structure so is a Point
     expect(f(obj)).toBe('x: 1, y: 2');
 
@@ -111,7 +111,7 @@ test('A class is also a type and matches structurally', () => {
         y: number;
     }
     const f = (p: Point) => `x: ${p.x}, y: ${p.y}`;
-    const obj = {x: 1, y: 2};
+    const obj = { x: 1, y: 2 };
     // obj has correct structure so is a Point
     expect(f(obj)).toBe('x: 1, y: 2');
     // Explicitly created from class also works
@@ -127,7 +127,7 @@ test('A class is also a type and matches structurally', () => {
 });
 
 test('Generic function', () => {
-    const f = function<T> (val: T) {
+    const f = function <T>(val: T) {
         return String(val);
     };
     // Each f is actually a different version of the function
@@ -153,3 +153,9 @@ test('Generic interface', () => {
     expect(myNumMaker.toNum(1)).toBe(1);
     expect(myOtherNumMaker.toNum('1')).toBe(1);
 })
+
+// test('Use incorrect type', () => {
+//     const f = (n: number) => String(n);
+//     expect(f(2)).toBe('2');
+//     expect(f({a: 1})).toBe('[object Object]');
+// })
