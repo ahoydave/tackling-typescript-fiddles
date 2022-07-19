@@ -17,6 +17,7 @@ test('Any type can be anything', () => {
 test('Unknown types must be narrowed before use', () => {
     let x: unknown;
     x = 1.1;
+    // unknown has no properties so can't do anything with it until we determine some type info
     expect((x as number).toFixed(0)).toBe('1');
     let y: unknown;
     y = 'hi';
