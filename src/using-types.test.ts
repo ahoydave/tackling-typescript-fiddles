@@ -154,6 +154,7 @@ test('Generic interface', () => {
     expect(myOtherNumMaker.toNum('1')).toBe(1);
 })
 
+// ** this fails as it should
 // test('Use incorrect type', () => {
 //     const f = (n: number) => String(n);
 //     expect(f(2)).toBe('2');
