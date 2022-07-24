@@ -84,7 +84,7 @@ test('An array like interface', () => {
     let arr2: MyIterable = ['a', 'b', 'c'];
     let arr: MyArray = arr2;
     // note can't do this the other way around
-    
+
     // can't do this because MyArray doesn't have the props of the iterator interface
     // expect([...arr]).toEqual(['a', 'b', 'c']);
     expect([...arr2]).toEqual(['a', 'b', 'c']);
@@ -104,7 +104,7 @@ test('Interface with multiple index signatures and other props', () => {
     }
 });
 
-test('When are extra properties allowed', () => {
+test('Extra properties allowed sometimes', () => {
     interface XY {
         x: number,
         y: number
@@ -113,8 +113,140 @@ test('When are extra properties allowed', () => {
         return p.x + p.y;
     }
     const o = { x: 1, y: 1, z: 1 };
-    expect(f({x: 1, y: 1})).toBe(2);
+    expect(f({ x: 1, y: 1 })).toBe(2);
     // type error here
     // expect(f({x: 1, y: 1, z: 1})).toBe(2);
     expect(f(o)).toBe(2);
+});
+
+test('Empty interfaces allow any excess properties', () => {
+    interface NoProps { }
+    interface OneProp {
+        prop: string
+    }
+    // this is fine
+    let x: NoProps = { a: 1, b: 2 };
+    // this is not - object literals are strict to catch typos
+    // let y: OneProp = { prop: 'nope', a: 1, b: 2 };
+    // but can do
+    function f(obj: OneProp): string {
+        return obj.prop;
+    }
+    let y = { prop: 'ok', a: 1, b: 2 };
+    // not an object literal so assumed there won't be a typo
+    expect(f(y)).toBe('ok');
+});
+
+test('Object with explicitly no properties', () => {
+    interface ReallyNoProps {
+        [key: string]: never
+    }
+    //this works
+    let x: ReallyNoProps = {}
+    // this does not
+    // let y: ReallyNoProps = { a: 1 }
+    // and neither does this
+    function f(obj: ReallyNoProps) { return 'nope'; }
+    let y = { prop: 1 };
+    // Error Argument of type '{ prop: number; }' is not assignable to parameter of type 'ReallyNoProps'
+    // f(y);
+    expect(f({})).toBe('nope');
+});
+
+test('Allowing additional properties in an object', () => {
+    interface HasProp { prop: string }
+    // error: Type '{ prop: string; a: number; }' is not assignable to type 'HasProp'.
+    // let x: HasProp = { prop: 'hi', a: 1 };
+    let y = { prop: 'hi', a: 1 }
+    let x = y;  // fine because intermediate variable used but x is not of type HasProp now
+    let z: HasProp = { prop: 'hi', a: 1 } as HasProp; // fine but now type system won't let you access 'a'
+
+    function f1<T extends HasProp>(obj: T): string {
+        return obj.prop;
+    }
+    f1({ prop: 'hi', a: 1 }); // fine because literal extends HasProp
+
+    interface HasPropPlus {
+        prop: string,
+        [key: string]: any
+    }
+    let xx: HasPropPlus = { prop: 'hi', a: 1 }; // fine because we're explicitly adding any prop
+    function f2(obj: HasPropPlus) {
+        return obj.a; // This is dangerous because now there is no type checking
+    }
+});
+
+test('Problem where we want excess properties', () => {
+    interface Incrementor { inc(): number }
+
+    // Error: Type '{ counter: number; inc(): number; }' is not assignable to type 'Incrementor'.
+    // function makeIncrementor(start: number): Incrementor {
+    //     return {
+    //         counter: start,
+    //         inc() {
+    //             return ++this.counter;
+    //         }
+    //     }
+    // }
+
+    // Can't do this because T is controlled by the caller so doesn't have to have 'counter'
+    // function makeIncrementor2<T extends Incrementor>(start: number): T {
+    //     return {
+    //         counter: start,
+    //         inc() {
+    //             return ++this.counter;
+    //         }
+    //     };
+    // }
+
+    // but using an intermediate variable works fine
+    function makeIncrementor3(start: number): Incrementor {
+        const incrementor = {
+            counter: start,
+            inc() {
+                return ++this.counter;
+            }
+        }
+        return incrementor;
+    }
+    expect(makeIncrementor3(2).inc()).toBe(3);
+});
+
+test('Optional properties', () => {
+    interface Eg {
+        required: number,
+        optional?: number,
+        maybe: undefined | number
+    }
+    let x: Eg = { required: 1, optional: 2, maybe: 3 };
+    let xx: Eg = { required: 1, optional: undefined, maybe: undefined }; // optionals can be undefined
+    let y: Eg = { required: 1, maybe: 3 }; //optionals can be left out entirely
+    // Error: Property 'maybe' is missing in type '{ required: number; }' but required in type 'Eg'
+    // let z: Eg = { required: 1 }
+});
+
+test('Readonly props', () => {
+    interface Eg {
+        readonly prop1: number,
+        prop2: number
+    }
+    let x: Eg = { prop1: 1, prop2: 2 }
+    // can read both
+    expect(x.prop1).toBe(1);
+    expect(x.prop2).toBe(2);
+
+    // Error: Cannot assign to 'prop1' because it is a read-only property
+    // x.prop1 = 3;
+    x.prop2 = 4;
+});
+
+test('Inherited properties and types', () => {
+    interface Eg {
+        prop: number,
+        toString(): string
+    }
+    let x: Eg = { prop: 1, toString() { return 'hi'; }};
+    let y: Eg = { prop: 1 }; // also fine because toString is inherited
+    let z: Eg = Object.create(null); // kinda weird that this works - guess it is because 'any' type returned
+    expect(z.prop).toBeUndefined();
 })
