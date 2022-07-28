@@ -249,4 +249,29 @@ test('Inherited properties and types', () => {
     let y: Eg = { prop: 1 }; // also fine because toString is inherited
     let z: Eg = Object.create(null); // kinda weird that this works - guess it is because 'any' type returned
     expect(z.prop).toBeUndefined();
+});
+
+test('Checking if obj implements an interface', () => {
+    // Does this even make sense since this would be a runtime check?
+    interface Eg1 {
+        prop1: number
+    }
+    interface Eg2 {
+        prop2: number
+    }
+
+    function f(arg: Eg1 | Eg2): number {
+        // can't do this - type system complains
+        // return arg.prop1 ?? arg.prop2 ?? 0;
+
+        // this is unrelated to the type system - working at runtime
+        if ('prop1' in arg) {
+            return arg.prop1;
+        } else if ('prop2' in arg) {
+            return arg.prop2;
+        }
+        return 0;
+    }
+    expect(f({ prop1: 1 })).toBe(1);
+    expect(f({ prop2: 2 })).toBe(2);
 })
