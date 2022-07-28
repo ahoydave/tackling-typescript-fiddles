@@ -274,4 +274,15 @@ test('Checking if obj implements an interface', () => {
     }
     expect(f({ prop1: 1 })).toBe(1);
     expect(f({ prop2: 2 })).toBe(2);
+});
+
+test('Intersection of interfaces', () => {
+    interface Eg1 { prop1: number }
+    interface Eg2 { prop2: number }
+
+    const f = (obj: Eg1 & Eg2) => {
+        return obj.prop1 + obj.prop2;
+    }
+
+    expect(f({ prop1: 1, prop2: 2 })).toBe(3);
 })
